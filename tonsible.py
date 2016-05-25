@@ -1,7 +1,13 @@
 import tornado.ioloop
 import tornado.web
+from flask.config import Config
+from tornado import gen
 from AnsibleRunner import AnsibleRunner
 import time
+from OptionParser import OptionParser
+
+class MyConfig:
+    counter = 0
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -9,17 +15,25 @@ class MainHandler(tornado.web.RequestHandler):
         #tornado.ioloop.IOLoop.current().spawn_callback(test)
 
 class GetExecuteAnsiblePlaybookHandler(tornado.web.RequestHandler):
-    def get(self):
-        tornado.ioloop.IOLoop.current().spawn_callback(exeucte_ansible)
+    def post(self, playbookname=None):
+        data = tornado.escape.json_decode(self.request.body)
+        MyConfig.counter = MyConfig.counter + 1
+
+
+        playbook, options = OptionParser.parse_opts(data, playbookname)
+        tornado.ioloop.IOLoop.current().spawn_callback(exeucte_ansible, playbook)
+        self.write(str(MyConfig.counter))
 
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
-        (r"/playbook/", GetExecuteAnsiblePlaybookHandler)
+        (r"/playbook", GetExecuteAnsiblePlaybookHandler),
+        (r"/playbook/(?P<playbookname>[^\/]+)", GetExecuteAnsiblePlaybookHandler)
     ])
 
-def exeucte_ansible():
-    ansible_runner = AnsibleRunner("package.yml")
+@gen.coroutine
+def exeucte_ansible(playbook):
+    ansible_runner = AnsibleRunner(playbook)
     ansible_runner.run()
 
 if __name__ == "__main__":

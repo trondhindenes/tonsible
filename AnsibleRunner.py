@@ -14,21 +14,22 @@ import yaml
 
 
 class AnsibleRunner:
-    def __init__(self, playbook):
+    def __init__(self, playbook, options):
         self.playbook = playbook
+        self.options = options
 
     def run(self):
         playbook = self.playbook
+        #Options = namedtuple('Options',['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check'])
         Options = namedtuple('Options',
-                             ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check'])
+             [])
         # initialize needed objects
         variable_manager = VariableManager()
         loader = DataLoader()
         #options = Options(connection='local', module_path='/path/to/mymodules', forks=100, become=None,
         #                  become_method=None, become_user=None, check=False)
-        options = Options(connection='local', module_path='/path/to/mymodules', forks=100, become=None,
-                            become_method=None, become_user=None, check=False)
-        passwords = dict(vault_pass='secret')
+        options = Options()
+        passwords = dict(vault_pass=self.vault_pass)
 
         # create inventory and pass to var manager
         inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list='/etc/ansible/hosts')
@@ -64,8 +65,10 @@ class AnsibleRunner:
                 stats = tqm._stats
 
             finally:
-                if tqm is not None:
-                    tqm.cleanup()
+                pass
+
+        if tqm is not None:
+            tqm.cleanup()
 
         #play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
         #pbex = PlaybookExecutor(playbooks='/home/thadministrator/wintest.yaml', inventory=inventory, variable_manager=variable_manager,
