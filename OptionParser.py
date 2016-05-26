@@ -3,6 +3,7 @@ from collections import namedtuple
 class ParserOptions:
     extra_vars = None
 
+
 class OptionParser:
     @staticmethod
     def parse_opts(opts, playbook=None):
