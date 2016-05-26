@@ -1,17 +1,21 @@
 from collections import namedtuple
 
+class ParserOptions:
+    extra_vars = None
+
 class OptionParser:
     @staticmethod
     def parse_opts(opts, playbook=None):
         keys = opts.keys()
-
+        extra_vars = []
         if playbook is None:
             playbook = opts['playbook']
 
         options = namedtuple('Options', [])
         for key in keys:
             if key not in ["playbook"]:
-                options = namedtuple('Options', options._fields+(key, ))
+                extra_vars.append({key: opts[key]})
 
-
-        return playbook, None
+        opts = ParserOptions()
+        opts.extra_vars = extra_vars
+        return playbook, opts

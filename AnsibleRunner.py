@@ -2,6 +2,7 @@
 from collections import namedtuple
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
+from ansible.utils.vars import load_extra_vars
 from ansible.inventory import Inventory
 from ansible.playbook.play import Play
 from ansible.playbook import Playbook
@@ -9,6 +10,7 @@ from ansible.playbook.block import Block
 from ansible.playbook.play_context import PlayContext
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.executor.task_queue_manager import TaskQueueManager
+
 import threading
 import yaml
 
@@ -17,18 +19,22 @@ class AnsibleRunner:
     def __init__(self, playbook, options):
         self.playbook = playbook
         self.options = options
+        self.vault_pass = None
 
     def run(self):
         playbook = self.playbook
-        #Options = namedtuple('Options',['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check'])
-        Options = namedtuple('Options',
-             [])
+        Options = namedtuple('Options',['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check'])
+
         # initialize needed objects
         variable_manager = VariableManager()
         loader = DataLoader()
-        #options = Options(connection='local', module_path='/path/to/mymodules', forks=100, become=None,
-        #                  become_method=None, become_user=None, check=False)
-        options = Options()
+        options = Options(connection='local', module_path='/path/to/mymodules', forks=100, become=None,
+                          become_method=None, become_user=None, check=False)
+
+
+        variable_manager.extra_vars = load_extra_vars(loader=loader, options=self.options)
+
+
         passwords = dict(vault_pass=self.vault_pass)
 
         # create inventory and pass to var manager
@@ -74,8 +80,6 @@ class AnsibleRunner:
         #pbex = PlaybookExecutor(playbooks='/home/thadministrator/wintest.yaml', inventory=inventory, variable_manager=variable_manager,
         #                        loader=loader)
         #results = pbex.run()
-
-
 
         return stats
 
